@@ -77,6 +77,8 @@ class Session {
     Response Post();
     Response Put();
 
+    static void setCaFilePath(const std::string &cafilepath);
+
   private:
     class Impl;
     std::unique_ptr<Impl> pimpl_;

@@ -44,7 +44,8 @@ class Session::Impl {
     Response Post();
     Response Put();
 
-  private:
+    static void setCaFile(const std::string &cafile);
+private:
     std::unique_ptr<CurlHolder, std::function<void(CurlHolder*)>> curl_;
     Url url_;
     Parameters parameters_;
@@ -53,7 +54,11 @@ class Session::Impl {
     Response makeRequest(CURL* curl);
     static void freeHolder(CurlHolder* holder);
     static CurlHolder* newHolder();
+
+    static std::string cafilepath;
 };
+
+std::string Session::Impl::cafilepath = "";
 
 Session::Impl::Impl() {
     curl_ = std::unique_ptr<CurlHolder, std::function<void(CurlHolder*)>>(newHolder(),
@@ -69,6 +74,8 @@ Session::Impl::Impl() {
         curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 50L);
         curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_->error);
         curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
+        curl_easy_setopt(curl, CURLOPT_CAINFO, cafilepath.c_str());
+
 #ifdef CPR_CURL_NOSIGNAL
         curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 #endif
@@ -95,6 +102,10 @@ CurlHolder* Session::Impl::newHolder() {
     holder->chunk = NULL;
     holder->formpost = NULL;
     return holder;
+}
+
+void Session::Impl::setCaFile(const std::string &cafile) {
+    Session::Impl::cafilepath = cafile;
 }
 
 void Session::Impl::SetUrl(const Url& url) {
@@ -472,6 +483,7 @@ Response Session::Options() { return pimpl_->Options(); }
 Response Session::Patch() { return pimpl_->Patch(); }
 Response Session::Post() { return pimpl_->Post(); }
 Response Session::Put() { return pimpl_->Put(); }
+void Session::setCaFilePath(const std::string &cafilepath) { Session::Impl::setCaFile(cafilepath); }
 // clang-format on
 
 } // namespace cpr
